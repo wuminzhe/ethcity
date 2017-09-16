@@ -1,0 +1,1 @@
+ActiveYaml::Base.set_root_path 'config/active_yaml'

@@ -1,0 +1,9 @@
+- id: 1
+  name: ethereum
+  symbol: ETH
+- id: 2
+  name: status
+  symbol: SNT
+- id: 3
+  name: attention
+  symbol: ATM
