@@ -1,6 +1,12 @@
 - id: 1
   name: ethereum
   symbol: ETH
+  etherscan_api_key: "CQZEXX84G6AQ5R8AZCII626EA43VPNJEEU"
+  chain: 'ropsten'
+  exchange_address_priv: "2f832c0c03c67d344f110df6ae37daf8181db66eb1efad3e63cfe55c2029a02c"
+  address_contract_address: "0x826c6ee06c89b2f8ceb39ebc3153a6e7553a2ebe"
+  gas_limit: 200000
+  gas_price: 20000000000 # 20gwei
 - id: 2
   name: status
   symbol: SNT

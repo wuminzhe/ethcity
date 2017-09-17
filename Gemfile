@@ -35,8 +35,10 @@ gem 'bootstrap', '~> 4.0.0.beta'
 gem 'jquery-rails'
 gem 'active_hash'
 gem 'rufus-scheduler'
+gem 'eth'
 gem 'ethereum.rb'
-gem 'etherscanio'
+# gem 'etherscanio', git: 'https://github.com/wuminzhe/etherscanio-rb.git', branch: 'master'
+gem 'etherscanio', path: '/Users/wuminzhe/Projects/huaxin/etherscanio-rb'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
