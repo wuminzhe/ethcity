@@ -25,7 +25,6 @@ class EthHandler < BaseHandler
     puts key.address
 
 
-
     encrypted_key_info = Eth::Key.encrypt key, passphase
       # contract = Ethereum::Contract.create(file: Rails.root.join('config', 'contracts', 'sweeper.sol').to_s, address: config[:address_contract_address])
       # puts contract
@@ -44,9 +43,10 @@ class EthHandler < BaseHandler
     to = config[:address_contract_address]
 
     rawtx = generate_raw_transaction(key, data, to)
-    txhash = client.eth_sendRawTransaction(rawtx)['result']
+    txhash = client.eth_sendRawTransaction(rawtx)
 
-    client.transaction_getstatus(txhash)
+    status = client.transaction_getstatus(txhash)
+    status['isError'] == '0'
   rescue Exception => e
     puts "Error: #{e}"
     puts e.backtrace[0, 20].join("\n")
@@ -61,7 +61,7 @@ class EthHandler < BaseHandler
 
   def generate_raw_transaction(key, data, to = nil)
     transaction_count = client.eth_getTransactionCount(key.address, 'latest')
-    nonce = transaction_count['result'].to_i(16)
+    nonce = transaction_count.to_i(16)
     args = {
         from: key.address,
         value: 0,
