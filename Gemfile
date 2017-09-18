@@ -37,8 +37,8 @@ gem 'active_hash'
 gem 'rufus-scheduler'
 gem 'eth'
 gem 'ethereum.rb'
-# gem 'etherscanio', git: 'https://github.com/wuminzhe/etherscanio-rb.git', branch: 'master'
-gem 'etherscanio', path: '/Users/wuminzhe/Projects/huaxin/etherscanio-rb'
+gem 'etherscanio', git: 'https://github.com/wuminzhe/etherscanio-rb.git', branch: 'master'
+# gem 'etherscanio', path: '/Users/wuminzhe/Projects/huaxin/etherscanio-rb'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
