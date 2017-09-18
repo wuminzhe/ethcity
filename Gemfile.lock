@@ -1,5 +1,7 @@
-PATH
-  remote: /Users/wuminzhe/Projects/huaxin/etherscanio-rb
+GIT
+  remote: https://github.com/wuminzhe/etherscanio-rb.git
+  revision: abd5ce313c9f2a07333ac005feabe6c6f1d3bfe6
+  branch: master
   specs:
     etherscanio (0.0.6)
       rest-client
@@ -243,4 +245,4 @@ DEPENDENCIES
   web-console (>= 3.3.0)
 
 BUNDLED WITH
-   1.15.1
+   1.15.4

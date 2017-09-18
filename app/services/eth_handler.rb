@@ -16,13 +16,23 @@ class EthHandler < BaseHandler
 
   def getnewaddress(account, passphase)
     passed, txhash = generate_address
+
     if passed
-      client.account_txlistinternal()
+      wait_for_miner(txhash)
+      txlistinternal = client.account_txlistinternal_txhash(txhash)
+      txlistinternal.length > 0 && txlistinternal.first['contractAddress']
     end
+
+    return nil
   end
 
   def sendtoaddress(address, amount)
 
+  end
+
+  def status
+    client.account_txlistinternal_txhash('0x8a4bfe54d737aea43b0778caaf26f8378016041530d8586b9242f853cacba464')
+    # client.transaction_getstatus("0x0731da22aa72f1852dafb0089a55b5b8e1b5ece247fb440e5505a8dfb955b671")
   end
 
   private
@@ -56,17 +66,17 @@ class EthHandler < BaseHandler
     [status['isError'] == '0', txhash]
   end
 
-  def status
-    client.transaction_getstatus("0x0731da22aa72f1852dafb0089a55b5b8e1b5ece247fb440e5505a8dfb955b671")
+  def wait_for_miner(txhash, timeout: 300.seconds, step: 5.seconds)
+    start_time = Time.now
+    loop do
+      raise Timeout::Error if ((Time.now - start_time) > timeout)
+      return true if mined?(txhash)
+      sleep step
+    end
   end
 
-  # def wait_for_miner(timeout: 300.seconds, step: 5.seconds)
-  #   start_time = Time.now
-  #   loop do
-  #     raise Timeout::Error if ((Time.now - start_time) > timeout)
-  #     return true if self.mined?
-  #     sleep step
-  #   end
-  # end
+  def mined?(txhash)
+    client.eth_getTransactionByHash(txhash)['blockNumber'].present?
+  end
 
 end
