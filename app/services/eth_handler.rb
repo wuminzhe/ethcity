@@ -1,82 +1,68 @@
 class EthHandler < BaseHandler
-
-  attr_accessor :client
+  include EthHelper
+  using PatternMatch
 
   def initialize
     super
-    Etherscanio.logger = Logger.new(STDOUT)
-    Etherscanio.logger.level = Logger::DEBUG
-    @client = Etherscanio::Api.new(config[:etherscan_api_key], config[:chain])
+    Etherscan.logger = Logger.new(STDOUT)
+    Etherscan.logger.level = Logger::DEBUG
+    Etherscan.api_key = config[:etherscan_api_key]
+    Etherscan.chain = config[:chain]
   end
 
   # 获取交易所的地址上币
   def getbalance
-    client.account_balance(config[:exchange_address], 'latest')
+    key = Eth::Key.from_private_key_hex config[:exchange_address_priv]
+    ret = Etherscan::Account.balance(key.address, 'latest')
+    match(ret) do
+      with(_[:error, e]) { nil }
+      with(_[:ok, result]) { result }
+    end
   end
 
   def getnewaddress(account, passphase)
-    passed, txhash = generate_address
-
-    if passed
-      wait_for_miner(txhash)
-      txlistinternal = client.account_txlistinternal_txhash(txhash)
-      txlistinternal.length > 0 && txlistinternal.first['contractAddress']
-    end
-
-    return nil
+    generate_address(config[:exchange_address_priv],
+                     config[:address_contract_address],
+                     config[:gas_limit],
+                     config[:gas_price])
   end
 
   def sendtoaddress(address, amount)
+    rawtx = generate_raw_transaction(config[:exchange_address_priv],
+                             amount,
+                             nil,
+                             config[:gas_limit],
+                             config[:gas_price],
+                             address)
+    return nil unless rawtx
 
+    send_raw_transaction(rawtx)
   end
 
-  def status
-    client.account_txlistinternal_txhash('0x8a4bfe54d737aea43b0778caaf26f8378016041530d8586b9242f853cacba464')
-    # client.transaction_getstatus("0x0731da22aa72f1852dafb0089a55b5b8e1b5ece247fb440e5505a8dfb955b671")
+  def gettransaction(txid)
+    tx = get_transaction_by_hash(txid)
+    return nil unless tx
+
+    number = block_number
+    return nil unless number
+
+    current_block_number = hex_to_dec(number) # 当前的高度
+    transaction_block_number = hex_to_dec(tx['blockNumber']) # 收到的就是已经上链的，不需要考虑blockNumber没有的情况
+
+    tx['confirmations'] = current_block_number - transaction_block_number
+
+    block = get_block_by_number(tx['blockNumber'])
+    tx['timereceived'] = hex_to_dec(block['timestamp']) if block
+    tx['details'] = [
+      {
+        'account' => 'payment',
+        'category' => 'receive',
+        'amount' => hex_wei_to_dec_eth(tx['value']),
+        'address' => tx['to']
+      }
+    ]
+    tx
   end
 
-  private
-
-  def generate_raw_transaction(key, data, to = nil)
-    transaction_count = client.eth_getTransactionCount(key.address, 'latest')
-    nonce = transaction_count.to_i(16)
-    args = {
-        from: key.address,
-        value: 0,
-        data: data,
-        nonce: nonce,
-        gas_limit: config[:gas_limit],
-        gas_price: config[:gas_price]
-    }
-    args[:to] = to if to
-    tx = Eth::Tx.new(args)
-    tx.sign key
-    tx.hex
-  end
-
-  def generate_address
-    key = Eth::Key.new priv: config[:exchange_address_priv]
-    data = '0x' + Ethereum::Function.calc_id('makeWallet()')
-    to = config[:address_contract_address]
-
-    rawtx = generate_raw_transaction(key, data, to)
-    txhash = client.eth_sendRawTransaction(rawtx)
-
-    status = client.transaction_getstatus(txhash)
-    [status['isError'] == '0', txhash]
-  end
-
-  def wait_for_miner(txhash, timeout: 300.seconds, step: 5.seconds)
-    start_time = Time.now
-    loop do
-      raise Timeout::Error if ((Time.now - start_time) > timeout)
-      return true if mined?(txhash)
-      sleep step
-    end
-  end
-
-  def mined?(txhash)
-    client.eth_getTransactionByHash(txhash)['blockNumber'].present?
-  end
 
 end
